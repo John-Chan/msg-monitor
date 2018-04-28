@@ -1,0 +1,59 @@
+
+server:
+  port: 0
+
+spring:
+  rabbitmq:
+    host: 192.168.0.166
+    port: 5672
+    username: guest
+    password: guest
+    publisher-confirms: true
+    publisher-returns: true
+    listener:
+      simple: #  for 1.5.10+
+        default-requeue-rejected: true
+        prefetch: 1
+        transaction-size: 1
+        retry:
+          enabled: true
+          max-attempts: 3
+    template:
+      retry:
+        enabled: true
+        max-attempts: 3
+  cloud:
+    stream: # see https://docs.spring.io/spring-cloud-stream/docs/current/reference/htmlsingle
+      default:
+        content-type: application/json
+      #binders.rabbit1:
+      # environment.spring.rabbitmq.host: 192.168.0.166
+      #  default-candidate: false
+      #  type: rabbit
+      bindings:
+        user_created_input:
+          binder: rabbit
+          destination:  userCreated  # the RabbitMQ exchange or Kafka topic
+          group: monitor
+        user_activated_input:
+          binder: rabbit
+          destination:  userActivated  # the RabbitMQ exchange or Kafka topic
+          group: monitor
+      rabbit:
+        bindings:
+          user_created_input:
+            consumer:
+              acknowledgeMode: AUTO
+              durableSubscription: true
+              prefetch: 1
+              requeueRejected: true
+              autoBindDlq: true
+              republishToDlq: true
+          user_activated_input:
+            consumer:
+              acknowledgeMode: AUTO
+              durableSubscription: true
+              prefetch: 1
+              requeueRejected: true
+              autoBindDlq: true
+              republishToDlq: true
